@@ -1,4 +1,4 @@
-with open("translator/sequence.txt", "r") as file:
+with open("sequence.txt", "r") as file:
     sequence = file.read().replace("\n", "")
 
 codon_to_amino_acid = {
@@ -35,7 +35,7 @@ codon_to_amino_acid = {
     "GCA": "Alanine",
     "GCG": "Alanine",
     "UAU": "Tyrosine",
-    "UAC":  "Tyrosine",
+    "UAC": "Tyrosine",
     "UAA": "STOP",
     "UAG": "STOP",
     "CAU": "Histidine",
@@ -68,64 +68,89 @@ codon_to_amino_acid = {
     "GGG": "Glycine",
 }
 
-complementary_base = {
+# uracil ._.
+DNA_to_RNA_complementary_base = {
     "A": "U",
     "T": "A",
     "C": "G",
     "G": "C",
 }
 
-class DNA:
-    def __init__(self, sequence):
-        self.sequence = sequence
-    
-    def get_strand(self):
-        return self.sequence
+RNA_to_DNA_complementary_base = {
+    "A": "T",
+    "U": "A",
+    "C": "G",
+    "G": "C",
+}
 
+DNA_complementary_base = {
+    "A": "T",
+    "T": "A",
+    "C": "G",
+    "G": "C",
+}
+
+RNA_complementary_base = {
+    "A": "U",
+    "U": "A",
+    "C": "G",
+    "G": "C",
+}
+
+class DNA:
+    def __init__(self, sequence: str):
+        self.sequence = sequence[:len(sequence)-(len(sequence)%3)]
+    
     def to_mRNA(self):
-        mRNA = []
-        for i in self.sequence:
-            mRNA.append(complementary_base.get(i))
-        return "".join(mRNA)
+        mRNA_strand = ""
+        for base in self.sequence:
+            mRNA_strand += DNA_to_RNA_complementary_base.get(base)
+
+        return mRNA(mRNA_strand)
+    
+    def to_complementary_DNA(self):
+        complementary_strand = ""
+        for base in self.sequence:
+            complementary_strand += DNA_complementary_base.get(base)
+
+        return DNA(complementary_strand)
 
 class mRNA:
-    def __init__(self, sequence):
-        self.sequence = sequence
+    def __init__(self, sequence: str):
+        self.sequence = sequence[:len(sequence)-(len(sequence)%3)]
     
-    def get_strand(self):
-        return self.sequence
-    
-    def get_codons(self):
-        codons = []
-        sequence = list(self.sequence)
-        counter = 0
+    def to_DNA(self):
+        DNA_strand = ""
+        for base in self.sequence:
+            DNA_strand += RNA_to_DNA_complementary_base.get(base)
 
-        while sequence:
-            if counter == 2:
-                counter = 0
-                codons.append("".join(sequence[:3]))
-                del sequence[:3]
-                continue
-            counter += 1
+        return DNA(DNA_strand)
+    
+    def get_codons(self) -> list:
+        return [self.sequence[i:i+3] for i in range(0, len(self.sequence), 3)]
+    
+    def get_anticodons(self) -> list:
+        codons = self.get_codons()
+        for i, codon in enumerate(codons):
+            anticodon = ""
+            for base in codon:
+                anticodon += RNA_complementary_base.get(base)
+            codons[i] = anticodon
 
         return codons
     
-    def to_polypeptide(self):
+    def get_polypeptide(self) -> list:
         codons = self.get_codons()
-
-        polypeptides = []
+        polypeptide = []
 
         for codon in codons:
             amino_acid = codon_to_amino_acid.get(codon)
-            polypeptides.append(amino_acid)
+            polypeptide.append(amino_acid)
 
             if amino_acid == "STOP":
-                return " - ".join(polypeptides)
+                return polypeptide
         
-        return " - ".join(polypeptides)
+        return polypeptide
 
 DNA_strand = DNA(sequence)
-mRNA_strand = mRNA(DNA_strand.to_mRNA())
-polypeptide = mRNA_strand.to_polypeptide()
-
-print(polypeptide)
+print(DNA_strand.to_mRNA().get_polypeptide())
