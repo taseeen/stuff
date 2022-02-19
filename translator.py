@@ -1,6 +1,3 @@
-with open("sequence.txt", "r") as file:
-    sequence = file.read().replace("\n", "")
-
 codon_to_amino_acid = {
     "UUU": "Phenylalanine",
     "UUC": "Phenylalanine",
@@ -140,7 +137,8 @@ class mRNA:
         return codons
     
     def get_polypeptide(self) -> list:
-        codons = self.get_codons()
+        sequence = self.sequence[self.sequence.find("AUG"):]
+        codons = [sequence[i:i+3] for i in range(0, len(sequence), 3)]
         polypeptide = []
 
         for codon in codons:
@@ -152,5 +150,15 @@ class mRNA:
         
         return polypeptide
 
-DNA_strand = DNA(sequence)
+DNA_input = input("Enter a DNA sequence: ").replace("\n", "").replace(" ", "").upper()
+
+if len(DNA_input) % 3 != 0:
+    print("Warning: Sequence length is not divisible by 3")
+
+for char in DNA_input:
+    if char not in ["A", "T", "C", "G"]:
+        raise SyntaxError("Invalid base entered")
+
+DNA_strand = DNA(DNA_input)
+
 print(DNA_strand.to_mRNA().get_polypeptide())
